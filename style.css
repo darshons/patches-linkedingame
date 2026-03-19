@@ -1,0 +1,533 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #e8e0d8;
+  --card-bg: #fff;
+  --header-bg: #fff;
+  --border: #c8c0b8;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --btn-bg: #f0ece8;
+  --btn-border: #c8c0b8;
+  --primary: #1a1a2e;
+  --radius: 10px;
+
+  /* Patch colors */
+  --c0: #5b9bd5;
+  --c1: #4caf70;
+  --c2: #e05a4e;
+  --c3: #c8a840;
+  --c4: #7b68c8;
+  --c5: #e87d3e;
+  --c6: #3ba8a8;
+  --c7: #d4608c;
+  --c8: #8bad5a;
+  --c9: #8070c0;
+}
+
+body {
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  height: 52px;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.game-title { font-size: 16px; font-weight: 600; }
+.header-center { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 14px; }
+.timer-icon { font-size: 14px; }
+.timer { font-variant-numeric: tabular-nums; min-width: 36px; }
+.header-right { display: flex; align-items: center; gap: 8px; position: relative; }
+
+.icon-btn {
+  background: none; border: none; font-size: 20px; cursor: pointer;
+  color: var(--text-muted); line-height: 1; padding: 2px 4px;
+}
+.btn-outline {
+  background: none; border: 1px solid var(--btn-border); border-radius: 16px;
+  padding: 4px 12px; font-size: 13px; cursor: pointer; color: var(--text);
+  white-space: nowrap;
+}
+.btn-outline:hover { background: var(--btn-bg); }
+
+/* Dropdown */
+.dropdown { position: relative; }
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0; top: calc(100% + 6px);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-menu button {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 14px; background: none; border: none;
+  font-size: 14px; cursor: pointer; color: var(--text);
+}
+.dropdown-menu button:hover { background: var(--btn-bg); }
+
+/* ── Main / Game ── */
+.main {
+  display: flex;
+  justify-content: center;
+  padding: 20px 16px;
+}
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Grid ── */
+.grid-wrapper {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  gap: 2px;
+  user-select: none;
+  touch-action: none;
+}
+
+.cell {
+  border-radius: 6px;
+  position: relative;
+  cursor: pointer;
+  aspect-ratio: 1;
+  min-width: 0;
+  background: #ddd6cc;
+  transition: filter 0.08s;
+}
+
+/* Filled cells show a light tint of the patch color */
+.cell.filled {
+  background: var(--patch-tint, #ccc);
+}
+
+/* Gray preview rectangle while dragging before a seed is claimed */
+.cell.pending-drag {
+  background: #c8c0b8;
+  outline: 2px dashed rgba(0,0,0,0.2);
+  outline-offset: -3px;
+}
+
+/* Invalid patch: diagonal stripe pattern like LinkedIn Patches error state */
+.cell.filled.invalid {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--patch-tint, #fcc) 0px,
+    var(--patch-tint, #fcc) 6px,
+    rgba(255,255,255,0.55) 6px,
+    rgba(255,255,255,0.55) 10px
+  );
+}
+
+.cell.error-flash { animation: errFlash 0.4s ease; }
+@keyframes errFlash {
+  0%,100% { filter: brightness(1); }
+  40% { filter: brightness(0.55) saturate(2); }
+}
+
+/* Area count badge shown on seed when size is wrong */
+.area-badge {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  background: rgba(0,0,0,0.25);
+  border-radius: 4px;
+  padding: 0 3px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+/* Error banner at bottom of game container */
+.error-banner {
+  width: 100%;
+  background: #fff0f0;
+  border: 1.5px solid #f0a0a0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #c03030;
+  font-weight: 500;
+  display: none;
+  text-align: center;
+}
+.error-banner.visible {
+  display: block;
+}
+
+/* ── Seed cell card ──
+   Matches LinkedIn Patches: colored rounded card with white number,
+   dashed border overlay to indicate "incomplete", tinted cell bg.
+── */
+.cell.seed {
+  background: var(--patch-tint, #e8e0d0);
+}
+
+.cell-label {
+  position: absolute;
+  inset: 7%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: var(--patch-color, #c8a840);
+  border-radius: 8px;
+  gap: 4px;
+  overflow: hidden;
+  /* dashed border overlay like LinkedIn Patches */
+  outline: 2px dashed rgba(255,255,255,0.6);
+  outline-offset: -4px;
+}
+
+.clue-num {
+  font-size: clamp(13px, 3.8vw, 24px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Shape icon inside seed card — white outline rectangle/circle */
+.shape-sym {
+  border: 2px solid rgba(255,255,255,0.8);
+  border-radius: 2px;
+  display: block;
+  flex-shrink: 0;
+}
+.shape-sym.square {
+  width: clamp(9px, 2.2vw, 15px);
+  height: clamp(9px, 2.2vw, 15px);
+}
+.shape-sym.tall {
+  width: clamp(6px, 1.5vw, 10px);
+  height: clamp(12px, 3vw, 19px);
+}
+.shape-sym.wide {
+  width: clamp(12px, 3vw, 19px);
+  height: clamp(6px, 1.5vw, 10px);
+}
+.shape-sym.any {
+  border-radius: 50%;
+  border-style: dashed;
+  width: clamp(9px, 2.2vw, 15px);
+  height: clamp(9px, 2.2vw, 15px);
+}
+
+/* ── Rules card shape icons (gray outlined, no fill) ── */
+.rules-shape-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.rules-shape-icon span {
+  display: block;
+  border: 2px solid #888;
+  border-radius: 2px;
+  background: transparent;
+}
+.rules-shape-icon.square span  { width: 14px; height: 14px; }
+.rules-shape-icon.tall   span  { width: 9px;  height: 16px; }
+.rules-shape-icon.wide   span  { width: 16px; height: 9px;  }
+.rules-shape-icon.any    span  {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border-style: dashed;
+  background: #ccc;
+}
+
+/* Patch borders — drawn via box-shadow on cells */
+.cell[data-patch] { position: relative; }
+
+/* ── Controls ── */
+.controls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+.control-btn {
+  flex: 1;
+  background: #fff;
+  border: 1.5px solid var(--btn-border);
+  border-radius: 20px;
+  padding: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text);
+}
+.control-btn:hover { background: var(--btn-bg); }
+.control-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Rules card ── */
+.rules-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.rules-icon-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* The patch icon in the rules card is a mini seed card */
+.patch-icon {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  background: var(--c3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  outline: 2px dashed rgba(255,255,255,0.55);
+  outline-offset: -5px;
+  position: relative;
+}
+.patch-icon .patch-num {
+  font-size: 20px; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.rules-label { font-size: 13px; color: var(--text); line-height: 1.5; font-weight: 500; }
+.shape-types {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.shape-types label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text); cursor: default;
+}
+.rules-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+/* ── See results ── */
+.see-results-btn {
+  width: 100%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.see-results-btn:hover { background: #2a2a4e; }
+
+/* ── Win modal ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.modal-emoji { font-size: 48px; margin-bottom: 12px; }
+.modal h2 { font-size: 22px; margin-bottom: 8px; }
+.modal p { color: var(--text-muted); margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; }
+.btn-primary {
+  flex: 1; background: var(--primary); color: #fff;
+  border: none; border-radius: 20px; padding: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { background: #2a2a4e; }
+.modal-actions .btn-outline { flex: 1; }
+
+/* ── Responsive ── */
+@media (max-width: 440px) {
+  .header { padding: 8px 12px; }
+  .main { padding: 12px 8px; }
+  .grid-wrapper { padding: 10px; }
+}
+
+/* Patch border highlight */
+.cell.selected-patch { outline: 3px solid rgba(0,0,0,0.3); outline-offset: -2px; }
+
+/* Drag preview */
+.cell.drag-preview {
+  opacity: 0.6;
+  outline: 2px dashed rgba(0,0,0,0.4);
+  outline-offset: -2px;
+}
+
+/* hint highlight */
+.cell.hint-highlight {
+  animation: hintPulse 1s ease 3;
+}
+@keyframes hintPulse {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.4) saturate(1.5); }
+}
+
+/* ── Leaderboard submit (inside win modal) ── */
+.lb-submit {
+  margin-bottom: 16px;
+  background: var(--btn-bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.lb-submit-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px !important;
+}
+.lb-input-row {
+  display: flex;
+  gap: 8px;
+}
+.lb-name-input {
+  flex: 1;
+  border: 1.5px solid var(--btn-border);
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+}
+.lb-name-input:focus { border-color: var(--primary); }
+.lb-submit-btn {
+  flex: 0 0 auto;
+  padding: 7px 16px;
+  font-size: 14px;
+}
+.lb-submit-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  min-height: 16px;
+  text-align: left;
+}
+.lb-submit-status.success { color: #2a9d5c; }
+.lb-submit-status.error   { color: #c03030; }
+
+/* ── Leaderboard modal ── */
+.lb-modal {
+  max-width: 380px;
+  padding: 28px 24px;
+}
+.lb-modal h2 { margin-bottom: 14px; }
+.lb-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  justify-content: center;
+}
+.lb-tab {
+  background: var(--btn-bg);
+  border: 1.5px solid var(--btn-border);
+  border-radius: 16px;
+  padding: 5px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.lb-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.lb-table-wrap {
+  min-height: 160px;
+  margin-bottom: 16px;
+}
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.lb-table th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.lb-table td {
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.lb-table tr:last-child td { border-bottom: none; }
+.lb-table td:first-child { color: var(--text-muted); font-weight: 600; width: 28px; }
+.lb-table td:last-child  { text-align: right; font-variant-numeric: tabular-nums; }
+.lb-rank-gold   { color: #c8a840 !important; }
+.lb-rank-silver { color: #888 !important; }
+.lb-rank-bronze { color: #b87040 !important; }
+.lb-empty, .lb-loading {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 32px 0;
+}
+.lb-close-btn { width: 100%; }
+
+/* ── AdSense banner slot ── */
+.ad-banner {
+  width: 100%;
+  max-width: 420px;
+  min-height: 60px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ── Leaderboard trophy button ── */
+#leaderboardBtn {
+  font-size: 16px;
+  padding: 4px 10px;
+}

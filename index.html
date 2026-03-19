@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patches</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <button class="icon-btn" id="backBtn" title="Back">&#8592;</button>
+        <span class="game-title">Patches</span>
+      </div>
+      <div class="header-center">
+        <span class="timer-icon">&#9716;</span>
+        <span class="timer" id="timer">0:00</span>
+      </div>
+      <div class="header-right">
+        <button class="btn-outline" id="leaderboardBtn">🏆</button>
+        <button class="btn-outline" id="resetBtn">Reset</button>
+        <div class="dropdown">
+          <button class="btn-outline" id="settingsBtn">Settings ▾</button>
+          <div class="dropdown-menu" id="settingsMenu">
+            <button id="newPuzzleBtn">New Puzzle</button>
+            <button id="difficultyBtn">Difficulty: <span id="diffLabel">Easy</span></button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="game-container">
+        <div class="grid-wrapper">
+          <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="controls">
+          <button class="control-btn" id="undoBtn">Undo</button>
+          <button class="control-btn" id="hintBtn">Hint</button>
+        </div>
+
+        <div class="rules-card">
+          <div class="rules-icon-area">
+            <div class="patch-icon" id="currentPatchIcon">
+              <span class="patch-num" id="patchNum">4</span>
+            </div>
+            <div class="rules-label">Complete each shape<br>to fill the grid</div>
+          </div>
+          <div class="shape-types">
+            <label>
+              <span class="rules-shape-icon square"><span></span></span>
+              Square
+            </label>
+            <label>
+              <span class="rules-shape-icon tall"><span></span></span>
+              Tall rectangle
+            </label>
+            <label>
+              <span class="rules-shape-icon wide"><span></span></span>
+              Wide rectangle
+            </label>
+            <label>
+              <span class="rules-shape-icon any"><span></span></span>
+              Any of the above
+            </label>
+          </div>
+          <div class="rules-note">If a shape has a number, it must be that size.</div>
+        </div>
+
+        <!-- AdSense banner — replace data-ad-* with your real values -->
+        <div class="ad-banner">
+          <ins class="adsbygoogle"
+               style="display:block;width:100%;height:60px"
+               data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+               data-ad-slot="XXXXXXXXXX"
+               data-ad-format="horizontal"
+               data-full-width-responsive="false"></ins>
+        </div>
+
+        <button class="see-results-btn" id="seeResultsBtn" style="display:none">See results</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="modal-overlay" id="winModal" style="display:none">
+    <div class="modal">
+      <div class="modal-emoji">🎉</div>
+      <h2>Puzzle Complete!</h2>
+      <p>You solved it in <strong id="finalTime"></strong></p>
+
+      <!-- Leaderboard submit section -->
+      <div class="lb-submit" id="lbSubmit">
+        <p class="lb-submit-label">Add to leaderboard? (optional)</p>
+        <div class="lb-input-row">
+          <input type="text" id="lbNameInput" class="lb-name-input" placeholder="Your name" maxlength="24" />
+          <button class="btn-primary lb-submit-btn" id="lbSubmitBtn">Submit</button>
+        </div>
+        <div class="lb-submit-status" id="lbSubmitStatus"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="playAgainBtn">Play Again</button>
+        <button class="btn-outline" id="shareBtn">Share</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Modal -->
+  <div class="modal-overlay" id="leaderboardModal" style="display:none">
+    <div class="modal lb-modal">
+      <h2>🏆 Leaderboard</h2>
+      <div class="lb-tabs" id="lbTabs">
+        <button class="lb-tab active" data-diff="easy">Easy</button>
+        <button class="lb-tab" data-diff="medium">Medium</button>
+        <button class="lb-tab" data-diff="hard">Hard</button>
+      </div>
+      <div class="lb-table-wrap">
+        <table class="lb-table" id="lbTable">
+          <thead><tr><th>#</th><th>Name</th><th>Time</th></tr></thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+        <div class="lb-empty" id="lbEmpty" style="display:none">No scores yet. Be the first!</div>
+        <div class="lb-loading" id="lbLoading" style="display:none">Loading…</div>
+      </div>
+      <button class="btn-outline lb-close-btn" id="lbCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="puzzle.js"></script>
+  <script src="leaderboard.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
