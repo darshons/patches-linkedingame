@@ -154,10 +154,19 @@ function bindLeaderboardUI() {
   });
 
   // Submit score from win modal
-  document.getElementById('lbSubmitBtn').addEventListener('click', async () => {
+  const submitBtn = document.getElementById('lbSubmitBtn');
+  submitBtn.addEventListener('click', async () => {
     const btn    = document.getElementById('lbSubmitBtn');
     const status = document.getElementById('lbSubmitStatus');
     const name   = document.getElementById('lbNameInput').value.trim();
+
+    // "Done" state — open the leaderboard
+    if (btn.dataset.state === 'done') {
+      document.getElementById('winModal').style.display = 'none';
+      document.getElementById('leaderboardModal').style.display = 'flex';
+      renderLeaderboard(_currentLbDiff);
+      return;
+    }
 
     btn.disabled = true;
     btn.textContent = '…';
@@ -169,10 +178,11 @@ function bindLeaderboardUI() {
 
     if (result.success) {
       status.className = 'lb-submit-status success';
-      status.textContent = '✓ Score submitted!';
+      status.textContent = '✓ Score submitted! Tap Done to view the board.';
       btn.textContent = 'Done';
+      btn.dataset.state = 'done';
+      btn.disabled = false;
       document.getElementById('lbNameInput').disabled = true;
-      // Auto-refresh leaderboard tab to this difficulty
       _currentLbDiff = window._lastWinDifficulty;
     } else {
       status.className = 'lb-submit-status error';

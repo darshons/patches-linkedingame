@@ -514,7 +514,7 @@ function onWin() {
   const submitBtn = document.getElementById('lbSubmitBtn');
   const status    = document.getElementById('lbSubmitStatus');
   if (nameInput) { nameInput.value = ''; nameInput.disabled = false; }
-  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit'; }
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit'; delete submitBtn.dataset.state; }
   if (status)    { status.textContent = ''; status.className = 'lb-submit-status'; }
 
   document.getElementById('finalTime').textContent = timeStr;
@@ -603,19 +603,7 @@ function bindUI() {
     }
   });
 
-  // Settings dropdown
-  document.getElementById('settingsBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('settingsMenu').classList.toggle('open');
-  });
-  document.addEventListener('click', () => {
-    document.getElementById('settingsMenu').classList.remove('open');
-  });
-
-  document.getElementById('newPuzzleBtn').addEventListener('click', () => {
-    document.getElementById('settingsMenu').classList.remove('open');
-    newPuzzle();
-  });
+  document.getElementById('newPuzzleBtn').addEventListener('click', newPuzzle);
 
   document.getElementById('difficultyBtn').addEventListener('click', () => {
     const levels = ['easy','medium','hard'];
@@ -624,11 +612,6 @@ function bindUI() {
     state.N = DIFFICULTY_SIZES[state.difficulty];
     document.getElementById('diffLabel').textContent = capitalize(state.difficulty);
     newPuzzle();
-  });
-
-  // Back button
-  document.getElementById('backBtn').addEventListener('click', () => {
-    if (confirm('Leave the game?')) window.history.back();
   });
 
   window.addEventListener('resize', () => sizeCells());

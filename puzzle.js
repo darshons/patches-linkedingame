@@ -35,7 +35,9 @@ function generateSolution(N, difficulty) {
   const grid = new Int8Array(N * N).fill(-1);
   const rects = [];
   const maxSize = maxPatchSize(N, difficulty);
-  const minSize = 2; // minimum area per patch
+  // minSize matches the target so small leftover patches don't form
+  const target = targetPatchSize(N, difficulty);
+  const minSize = Math.max(2, Math.floor(target * 0.5));
 
   let id = 0;
   while (true) {
@@ -81,24 +83,21 @@ function generateSolution(N, difficulty) {
 }
 
 function maxPatchSize(N, difficulty) {
+  // Cap max side length (not area) to prevent one giant patch eating the grid
   switch (difficulty) {
-    case 'easy':   return Math.floor(N * N / 3);
-    case 'medium': return Math.floor(N * N / 2);
-    case 'hard':   return N * N;
-    default:       return Math.floor(N * N / 2);
+    case 'easy':   return Math.ceil(N / 2);      // e.g. 3 on 5×5
+    case 'medium': return Math.ceil(N * 0.7);    // e.g. 4 on 5×5
+    case 'hard':   return N;                     // full grid width allowed
+    default:       return Math.ceil(N * 0.7);
   }
 }
 
 function targetPatchSize(N, difficulty) {
-  // Target ~N²/5 cells per patch (so ~5 patches on a 5×5 grid)
-  // Easy: slightly smaller patches (more patches), Hard: larger patches (fewer patches)
-  const base = N * N / 5;
-  switch (difficulty) {
-    case 'easy':   return Math.max(2, Math.round(base * 0.8));
-    case 'medium': return Math.max(3, Math.round(base));
-    case 'hard':   return Math.max(4, Math.round(base * 1.3));
-    default:       return Math.max(3, Math.round(base));
-  }
+  // Target patch count: easy=5, medium=7, hard=10 (scales with grid)
+  // More patches = harder because more constraints to satisfy simultaneously
+  // targetSize = N² / targetCount
+  const targetCount = { easy: 5, medium: 7, hard: 10 }[difficulty] ?? 7;
+  return Math.max(2, Math.round(N * N / targetCount));
 }
 
 function canPlace(grid, N, r, c, h, w) {
